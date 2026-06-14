@@ -1,0 +1,109 @@
+POST http://127.0.0.1:5000/tasks
+Content-Type: application/json
+
+{
+  "title": "Learn SQLite",
+  "description": "Connect Flask to SQLite",
+  "category": "programming"
+}
+
+###
+
+GET http://127.0.0.1:5000/tasks
+
+###
+
+GET http://127.0.0.1:5000/tasks/1
+
+###
+
+GET http://127.0.0.1:5000/tasks/999
+
+###
+
+PUT http://127.0.0.1:5000/tasks/2
+Content-Type: application/json
+
+{
+  "status": "completed"
+}
+
+###
+
+PUT http://127.0.0.1:5000/tasks/999
+Content-Type: application/json
+
+{
+  "status": "completed"
+}
+
+###
+
+DELETE http://127.0.0.1:5000/tasks/1
+
+###
+
+POST http://127.0.0.1:5000/tasks
+Content-Type: application/json
+
+{
+  "title": "Study Flask",
+  "description": "Practice API routes",
+  "category": "programming"
+}
+
+###
+
+POST http://127.0.0.1:5000/tasks
+Content-Type: application/json
+
+{
+  "title": "Go walking",
+  "description": "Walk for 30 minutes",
+  "category": "personal"
+}
+
+###
+
+POST http://127.0.0.1:5000/tasks
+Content-Type: application/json
+
+{
+  "title": "Read SQL",
+  "description": "Learn SELECT and UPDATE",
+  "category": "study"
+}
+
+###
+
+GET http://127.0.0.1:5000/tasks
+
+###
+
+GET http://127.0.0.1:5000/tasks?status=pending
+
+###
+
+GET http://127.0.0.1:5000/tasks?category=programming
+
+###
+
+GET http://127.0.0.1:5000/tasks?status=pending&category=programming
+
+###
+
+PUT http://127.0.0.1:5000/tasks/2
+Content-Type: application/json
+
+{
+  "status": "banana"
+}
+
+###
+
+PUT http://127.0.0.1:5000/tasks/2
+Content-Type: application/json
+
+{
+  "status": "completed"
+}

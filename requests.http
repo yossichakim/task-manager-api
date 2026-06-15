@@ -1,3 +1,6 @@
+@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc4MTUyNTUyNywianRpIjoiZjBhNGQyZGMtNjgyOC00NmZlLThkMGYtZmJkNDhiZGRjYzUyIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjEiLCJuYmYiOjE3ODE1MjU1MjcsImNzcmYiOiIxZTBjODI2OS1lYzg1LTQxODQtYjI3MC05MTg0M2MxN2UxNDUiLCJleHAiOjE3ODE1MjY0Mjd9.SSNvojI_Z4Kms6dfaf8dQ7YbXSe8z5lBTiSnXvvwJ1o
+
+###
 POST http://127.0.0.1:5000/tasks
 Content-Type: application/json
 
@@ -85,6 +88,7 @@ GET http://127.0.0.1:5000/tasks?status=pending
 ###
 
 GET http://127.0.0.1:5000/tasks?category=programming
+Authorization: Bearer {{access_token}}
 
 ###
 
@@ -107,3 +111,118 @@ Content-Type: application/json
 {
   "status": "completed"
 }
+
+### Register a new user
+POST http://127.0.0.1:5000/register
+Content-Type: application/json
+
+{
+    "username": "yossi",
+    "password": "123456"
+}
+
+### Register with a short password
+POST http://127.0.0.1:5000/register
+Content-Type: application/json
+
+{
+    "username": "david",
+    "password": "123"
+}
+
+### Register without a username
+POST http://127.0.0.1:5000/register
+Content-Type: application/json
+
+{
+    "password": "123456"
+}
+
+### Login with valid credentials
+POST http://127.0.0.1:5000/login
+Content-Type: application/json
+
+{
+    "username": "yossi",
+    "password": "123456"
+}
+
+### Login with an invalid password
+POST http://127.0.0.1:5000/login
+Content-Type: application/json
+
+{
+    "username": "yossi",
+    "password": "wrong-password"
+}
+
+### Login with valid credentials
+# @name loginYossi
+POST http://127.0.0.1:5000/login
+Content-Type: application/json
+
+{
+    "username": "yossi",
+    "password": "123456"
+}
+
+### Get all tasks
+GET http://127.0.0.1:5000/tasks
+Authorization: Bearer {{access_token}}
+
+### Create a task for the logged-in user
+POST http://127.0.0.1:5000/tasks
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+    "title": "Learn task ownership",
+    "description": "Connect tasks to users",
+    "category": "study"
+}
+
+### Get current user's tasks
+GET http://127.0.0.1:5000/tasks
+Authorization: Bearer {{access_token}}
+
+### Register second user
+POST http://127.0.0.1:5000/register
+Content-Type: application/json
+
+{
+    "username": "david",
+    "password": "123456"
+}
+
+### Login as second user
+# @name loginDavid
+POST http://127.0.0.1:5000/login
+Content-Type: application/json
+
+{
+    "username": "david",
+    "password": "123456"
+}
+
+### Create task for David
+POST http://127.0.0.1:5000/tasks
+Content-Type: application/json
+Authorization: Bearer {{loginDavid.response.body.access_token}}
+
+{
+    "title": "David task",
+    "description": "This task belongs to David",
+    "category": "personal"
+}
+
+### Get David's tasks
+GET http://127.0.0.1:5000/tasks
+Authorization: Bearer {{loginDavid.response.body.access_token}}
+
+### Get Yossi's tasks
+GET http://127.0.0.1:5000/tasks
+Authorization: Bearer {{loginYossi.response.body.access_token}}
+
+### Yossi tries to access David's task
+GET http://127.0.0.1:5000/tasks/7
+Authorization: Bearer {{loginDavid.response.body.access_token}}

@@ -1,22 +1,34 @@
 import sqlite3
 
+from flask import current_app
 
-DATABASE_NAME = "tasks.db"
+
+def get_database_connection():
+    database_name = current_app.config["DATABASE"]
+
+    connection = sqlite3.connect(database_name)
+    connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA foreign_keys = ON")
+
+    return connection
 
 
-def create_database():
-    connection = sqlite3.connect(DATABASE_NAME)
+def init_db():
+    connection = get_database_connection()
     cursor = connection.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL UNIQUE,
             password_hash TEXT NOT NULL
         )
-    """)
+        """
+    )
 
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
@@ -26,26 +38,24 @@ def create_database():
             user_id INTEGER,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
-    """)
+        """
+    )
 
     task_columns = cursor.execute(
         "PRAGMA table_info(tasks)"
     ).fetchall()
 
     column_names = [
-        column[1] for column in task_columns
+        column["name"] for column in task_columns
     ]
 
     if "user_id" not in column_names:
-        cursor.execute("""
+        cursor.execute(
+            """
             ALTER TABLE tasks
             ADD COLUMN user_id INTEGER
-        """)
+            """
+        )
 
     connection.commit()
     connection.close()
-
-
-if __name__ == "__main__":
-    create_database()
-    print("Database created successfully")

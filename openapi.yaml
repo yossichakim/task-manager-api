@@ -9,8 +9,8 @@ info:
   version: 1.0.0
 
 servers:
-  - url: http://127.0.0.1:5000
-    description: Local development server
+  - url: /
+    description: Current server
 
 tags:
   - name: General

@@ -12,7 +12,7 @@ TEST_DATABASE = "test_tasks.db"
 def app():
     app = create_app({
         "TESTING": True,
-        "JWT_SECRET_KEY": "test-secret-key",
+        "JWT_SECRET_KEY": "test-secret-key-with-at-least-32-characters",
         "DATABASE": TEST_DATABASE
     })
 

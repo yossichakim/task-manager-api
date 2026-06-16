@@ -1,8 +1,8 @@
 # Task Manager API
 
-A RESTful backend API built with Flask and SQLite for secure personal task management.
+A full-stack task manager project with a Flask/SQLite backend and a React/Vite frontend.
 
-Users can register, log in, receive a JWT access token, and perform CRUD operations only on tasks that belong to their own account.
+The backend lets users register, log in, receive a JWT access token, and perform CRUD operations only on tasks that belong to their own account.
 
 ## Live Demo
 
@@ -13,69 +13,56 @@ Users can register, log in, receive a JWT access token, and perform CRUD operati
 
 ## Features
 
-* User registration
-* User login
+* User registration and login
 * Secure password hashing
-* JWT authentication
-* JWT logout and token revocation
-* Create personal tasks
-* Retrieve all personal tasks
-* Filter tasks by status
-* Filter tasks by category
-* Retrieve a task by ID
-* Update task details
-* Mark tasks as pending or completed
-* Delete tasks
-* User-specific task ownership
+* JWT authentication, logout, and token revocation
+* User-owned task CRUD operations
+* Task filtering by status and category
 * Interactive Swagger/OpenAPI documentation
-* Automated tests with pytest
-* Production deployment with Gunicorn and Render
+* Automated backend tests with pytest
+* React frontend built with Vite
+* Production backend deployment with Gunicorn and Render
 
 ## Technologies
 
-* Python
-* Flask
-* SQLite
-* Flask-JWT-Extended
-* Werkzeug
-* python-dotenv
-* Flask-Swagger-UI
-* OpenAPI 3.0
-* pytest
-* Gunicorn
-* Render
+* Python, Flask, SQLite, Flask-JWT-Extended, python-dotenv
+* Flask-Swagger-UI, OpenAPI 3.0
+* pytest, Gunicorn, Render
+* React, Vite, ESLint
 * Git and GitHub
 
 ## Project Structure
 
 ```text
 task-manager-api/
-├── app/
-│   ├── __init__.py
-│   ├── auth_routes.py
-│   ├── database.py
-│   ├── jwt_handlers.py
-│   ├── main_routes.py
-│   └── task_routes.py
-├── tests/
-│   ├── conftest.py
-│   ├── test_auth.py
-│   ├── test_jwt.py
-│   ├── test_main.py
-│   └── test_tasks.py
-├── .env.example
-├── .gitignore
-├── app.py
-├── openapi.yaml
-├── README.md
-├── requests.http
-├── requirements.txt
-└── wsgi.py
+|-- backend/
+|   |-- app/
+|   |   |-- __init__.py
+|   |   |-- auth_routes.py
+|   |   |-- database.py
+|   |   |-- jwt_handlers.py
+|   |   |-- main_routes.py
+|   |   `-- task_routes.py
+|   |-- tests/
+|   |   |-- conftest.py
+|   |   |-- test_auth.py
+|   |   |-- test_jwt.py
+|   |   |-- test_main.py
+|   |   `-- test_tasks.py
+|   |-- .env.example
+|   |-- app.py
+|   |-- openapi.yaml
+|   |-- requests.http
+|   |-- requirements.txt
+|   `-- wsgi.py
+|-- frontend/
+|-- .gitignore
+`-- README.md
 ```
 
-## Architecture
+## Backend Architecture
 
-The project uses the Flask application factory pattern.
+The backend uses the Flask application factory pattern.
 
 The `create_app()` function:
 
@@ -87,29 +74,22 @@ The `create_app()` function:
 * Serves the OpenAPI specification
 * Configures Swagger UI
 
-The application is divided into separate modules for authentication, task management, database access, JWT handling, and general routes.
+The backend is divided into separate modules for authentication, task management, database access, JWT handling, and general routes.
 
-## Installation
+## Backend Installation
 
-### 1. Clone the repository
+Clone the repository and enter it:
 
 ```bash
 git clone https://github.com/yossichakim/task-manager-api.git
-```
-
-### 2. Navigate to the project directory
-
-```bash
 cd task-manager-api
 ```
 
-### 3. Create a virtual environment
+Create and activate a virtual environment from the repository root:
 
 ```bash
 python -m venv venv
 ```
-
-### 4. Activate the virtual environment
 
 Windows Command Prompt:
 
@@ -129,15 +109,16 @@ macOS or Linux:
 source venv/bin/activate
 ```
 
-### 5. Install dependencies
+Install backend dependencies from `backend/`:
 
 ```bash
+cd backend
 python -m pip install -r requirements.txt
 ```
 
 ## Environment Variables
 
-Create a `.env` file in the project root:
+Create a `.env` file in the repository root:
 
 ```env
 JWT_SECRET_KEY=your-secure-secret-key
@@ -153,40 +134,27 @@ Copy the generated value into the `.env` file.
 
 Do not commit the `.env` file to GitHub.
 
-An example configuration is available in `.env.example`.
+An example configuration is available in `backend/.env.example`.
 
 ## Database
 
-The project uses SQLite.
-
-The database and its required tables are initialized automatically when the Flask application starts.
+The backend uses SQLite. The database and its required tables are initialized automatically when the Flask application starts.
 
 No manual database setup command is required.
 
 The main tables are:
 
-### Users
-
-* `id`
-* `username`
-* `password_hash`
-
-### Tasks
-
-* `id`
-* `title`
-* `description`
-* `category`
-* `status`
-* `user_id`
+* `users`: `id`, `username`, `password_hash`
+* `tasks`: `id`, `title`, `description`, `category`, `status`, `user_id`
 
 Each task is connected to the user who created it.
 
-## Run Locally
+## Run Backend Locally
 
-Start the development server:
+Start the development server from `backend/`:
 
 ```bash
+cd backend
 python app.py
 ```
 
@@ -204,13 +172,41 @@ http://127.0.0.1:5000/docs
 
 ## Production Entry Point
 
-The production deployment uses Gunicorn and the WSGI entry point:
+The production deployment uses Gunicorn and the WSGI entry point from `backend/`:
 
 ```bash
+cd backend
 gunicorn wsgi:app
 ```
 
-The `wsgi.py` file creates the Flask application instance used by the production server.
+The `backend/wsgi.py` file creates the Flask application instance used by the production server.
+
+## Frontend
+
+Install frontend dependencies from `frontend/`:
+
+```bash
+cd frontend
+npm install
+```
+
+Run the frontend development server:
+
+```bash
+npm run dev
+```
+
+Build the frontend:
+
+```bash
+npm run build
+```
+
+Lint the frontend:
+
+```bash
+npm run lint
+```
 
 ## API Documentation
 
@@ -272,7 +268,7 @@ Swagger automatically adds the `Bearer` prefix.
 
 ## Request Examples
 
-### Register
+Register:
 
 ```http
 POST /register
@@ -286,7 +282,7 @@ Content-Type: application/json
 }
 ```
 
-### Login
+Log in:
 
 ```http
 POST /login
@@ -300,20 +296,9 @@ Content-Type: application/json
 }
 ```
 
-A successful login returns an access token:
+A successful login returns an access token.
 
-```json
-{
-  "access_token": "<jwt_access_token>",
-  "message": "Login successful",
-  "user": {
-    "id": 1,
-    "username": "yossi"
-  }
-}
-```
-
-### Create a Task
+Create a task:
 
 ```http
 POST /tasks
@@ -329,13 +314,7 @@ Content-Type: application/json
 }
 ```
 
-New tasks receive the default status:
-
-```text
-pending
-```
-
-### Get All Tasks
+Get all tasks:
 
 ```http
 GET /tasks
@@ -350,7 +329,7 @@ GET /tasks?category=work
 GET /tasks?status=completed&category=study
 ```
 
-### Update a Task
+Update a task:
 
 ```http
 PUT /tasks/1
@@ -364,47 +343,34 @@ Content-Type: application/json
 }
 ```
 
-Fields that are not included in the request keep their existing values.
-
-### Delete a Task
+Delete a task:
 
 ```http
 DELETE /tasks/1
 Authorization: Bearer <access_token>
 ```
 
-## Testing
+## Backend Testing
 
-Run the complete test suite:
+Run the complete backend test suite from `backend/`:
 
 ```bash
+cd backend
 python -m pytest
 ```
 
 Run the tests with verbose output:
 
 ```bash
+cd backend
 python -m pytest -v
 ```
 
-The test suite covers:
-
-* User registration
-* User login
-* Password validation
-* JWT authentication
-* JWT error handling
-* JWT logout and revocation
-* Task creation
-* Task retrieval
-* Task filtering
-* Task updates
-* Task deletion
-* User ownership and access isolation
+The test suite covers registration, login, password validation, JWT handling, logout and revocation, task CRUD operations, filtering, ownership, and access isolation.
 
 ## Testing with REST Client
 
-The `requests.http` file contains example HTTP requests that can be executed with the REST Client extension in Visual Studio Code.
+The `backend/requests.http` file contains example HTTP requests that can be executed with the REST Client extension in Visual Studio Code.
 
 Update the access token in the file after logging in.
 
@@ -413,6 +379,11 @@ Update the access token in the file after logging in.
 The API is deployed on Render.
 
 Render configuration:
+
+```text
+Root Directory:
+backend
+```
 
 ```text
 Build Command:
@@ -469,17 +440,7 @@ A production-ready future version should use a persistent database such as Postg
 
 ## Project Status
 
-The core backend project is complete and includes:
-
-* RESTful API design
-* User authentication
-* JWT authorization
-* Task CRUD operations
-* User-specific data ownership
-* Automated testing
-* OpenAPI documentation
-* Swagger UI
-* Public deployment
+The backend project is complete and includes RESTful API design, user authentication, JWT authorization, task CRUD operations, user-specific data ownership, automated testing, OpenAPI documentation, Swagger UI, and public deployment.
 
 ## Author
 

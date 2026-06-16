@@ -5,3 +5,4 @@ tasks.db
 .env
 .vscode/
 frontend/.vite/
+*.db

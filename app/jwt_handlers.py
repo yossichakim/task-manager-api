@@ -1,7 +1,27 @@
 from flask import jsonify
+from app.database import get_database_connection
 
 
 def register_jwt_handlers(jwt):
+    @jwt.token_in_blocklist_loader
+    def is_token_revoked(jwt_header, jwt_payload):
+        jti = jwt_payload["jti"]
+
+        connection = get_database_connection()
+
+        revoked_token = connection.execute(
+            """
+            SELECT id
+            FROM revoked_tokens
+            WHERE jti = ?
+            """,
+            (jti,)
+        ).fetchone()
+
+        connection.close()
+
+        return revoked_token is not None
+
     @jwt.unauthorized_loader
     def handle_missing_token(reason):
         return jsonify({

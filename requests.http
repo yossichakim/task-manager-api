@@ -224,10 +224,11 @@ GET http://127.0.0.1:5000/tasks
 Authorization: Bearer {{loginYossi.response.body.access_token}}
 
 ### Yossi tries to access David's task
-GET http://127.0.0.1:5000/tasks/7
-Authorization: Bearer {{loginDavid.response.body.access_token}}
+GET http://127.0.0.1:5000/tasks
+Authorization: Bearer {{loginRina.response.body.access_token}}
 
 ###
+# @name loginRina
 POST http://127.0.0.1:5000/login
 Content-Type: application/json
 
@@ -244,4 +245,8 @@ Content-Type: application/json
   "username": "yossi",
   "password": "123456"
 }
+
+### Logout
+DELETE http://127.0.0.1:5000/logout
+Authorization: Bearer {{loginRina.response.body.access_token}}
 

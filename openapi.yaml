@@ -1,0 +1,751 @@
+openapi: 3.0.3
+
+info:
+  title: Task Manager API
+  description: >
+    A RESTful API built with Flask for user authentication and personal
+    task management. Users can register, log in, and manage their own tasks
+    using JWT authentication.
+  version: 1.0.0
+
+servers:
+  - url: http://127.0.0.1:5000
+    description: Local development server
+
+tags:
+  - name: General
+    description: General API information
+
+  - name: Authentication
+    description: User registration and login
+
+  - name: Tasks
+    description: Task management operations
+
+paths:
+  /:
+    get:
+      tags:
+        - General
+      summary: Check API status
+      description: Returns a message confirming that the API is running.
+      responses:
+        "200":
+          description: API is running successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                message: Task Manager API is running
+
+  /about:
+    get:
+      tags:
+        - General
+      summary: Get API information
+      description: Returns basic information about the project.
+      responses:
+        "200":
+          description: API information returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AboutResponse"
+              example:
+                project: Task Manager API
+                language: Python
+                framework: Flask
+
+  /register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Creates a new user account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthRequest"
+            example:
+              username: swagger_user
+              password: "123456"
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterResponse"
+              example:
+                id: 1
+                username: swagger_user
+                message: User registered successfully
+
+        "400":
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalid_json:
+                  summary: Invalid JSON
+                  value:
+                    error: Request body must contain valid JSON
+
+                missing_username:
+                  summary: Missing username
+                  value:
+                    error: Username is required
+
+                missing_password:
+                  summary: Missing password
+                  value:
+                    error: Password is required
+
+                short_username:
+                  summary: Username is too short
+                  value:
+                    error: Username must contain at least 3 characters
+
+                short_password:
+                  summary: Password is too short
+                  value:
+                    error: Password must contain at least 6 characters
+
+        "409":
+          description: Username already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: Username already exists
+
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: Log in
+      description: Authenticates a user and returns a JWT access token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthRequest"
+            example:
+              username: swagger_user
+              password: "123456"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+              example:
+                access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+                user:
+                  id: 1
+                  username: swagger_user
+                message: Login successful
+
+        "400":
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalid_json:
+                  summary: Invalid JSON
+                  value:
+                    error: Request body must contain valid JSON
+
+                missing_username:
+                  summary: Missing username
+                  value:
+                    error: Username is required
+
+                missing_password:
+                  summary: Missing password
+                  value:
+                    error: Password is required
+
+        "401":
+          description: Invalid username or password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: Invalid username or password
+
+  /logout:
+    delete:
+      tags:
+        - Authentication
+      summary: Log out
+      description: >
+        Revokes the current JWT access token. After logout, the same token
+        cannot be used to access protected endpoints.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+              example:
+                message: Logout successful
+
+        "401":
+          description: Missing, expired, or revoked authorization token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JwtErrorResponse"
+              examples:
+                missing_token:
+                  summary: Missing token
+                  value:
+                    error: Authorization token is required
+                    details: Missing Authorization Header
+
+                expired_token:
+                  summary: Expired token
+                  value:
+                    error: Authorization token has expired
+
+                revoked_token:
+                  summary: Revoked token
+                  value:
+                    error: Authorization token has been revoked
+
+        "422":
+          $ref: "#/components/responses/InvalidToken"
+  /tasks:
+    get:
+      tags:
+        - Tasks
+      summary: Get all tasks
+      description: >
+        Returns all tasks belonging to the authenticated user.
+        Results can optionally be filtered by status or category.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter tasks by status
+          schema:
+            type: string
+            enum:
+              - pending
+              - completed
+          example: pending
+
+        - name: category
+          in: query
+          required: false
+          description: Filter tasks by category
+          schema:
+            type: string
+          example: work
+
+      responses:
+        "200":
+          description: Tasks returned successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+              example:
+                - id: 1
+                  title: Finish Swagger documentation
+                  description: Document all API endpoints
+                  category: work
+                  status: pending
+                  user_id: 1
+
+        "401":
+          $ref: "#/components/responses/MissingToken"
+
+        "422":
+          $ref: "#/components/responses/InvalidToken"
+
+    post:
+      tags:
+        - Tasks
+      summary: Create a new task
+      description: Creates a new task for the authenticated user.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskCreateRequest"
+            example:
+              title: Finish Swagger documentation
+              description: Document all API endpoints
+              category: work
+
+      responses:
+        "201":
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+              example:
+                id: 1
+                title: Finish Swagger documentation
+                description: Document all API endpoints
+                category: work
+                status: pending
+                user_id: 1
+
+        "400":
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalid_json:
+                  summary: Invalid JSON
+                  value:
+                    error: Request body must contain valid JSON
+
+                missing_title:
+                  summary: Missing task title
+                  value:
+                    error: Title is required
+
+        "401":
+          $ref: "#/components/responses/MissingToken"
+
+        "422":
+          $ref: "#/components/responses/InvalidToken"
+
+  /tasks/{task_id}:
+    get:
+      tags:
+        - Tasks
+      summary: Get a task by ID
+      description: Returns one task belonging to the authenticated user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TaskId"
+
+      responses:
+        "200":
+          description: Task returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+              example:
+                id: 1
+                title: Finish Swagger documentation
+                description: Document all API endpoints
+                category: work
+                status: pending
+                user_id: 1
+
+        "401":
+          $ref: "#/components/responses/MissingToken"
+
+        "404":
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: Task not found
+
+        "422":
+          $ref: "#/components/responses/InvalidToken"
+
+    put:
+      tags:
+        - Tasks
+      summary: Update a task
+      description: >
+        Updates an existing task. Fields that are not included in the request
+        keep their current values.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TaskId"
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskUpdateRequest"
+            example:
+              title: Finish Swagger documentation
+              description: Complete and test the API documentation
+              category: work
+              status: completed
+
+      responses:
+        "200":
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+              example:
+                id: 1
+                title: Finish Swagger documentation
+                description: Complete and test the API documentation
+                category: work
+                status: completed
+                user_id: 1
+
+        "400":
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalid_json:
+                  summary: Invalid JSON
+                  value:
+                    error: Request body must contain valid JSON
+
+                empty_title:
+                  summary: Empty task title
+                  value:
+                    error: Title cannot be empty
+
+                invalid_status:
+                  summary: Invalid task status
+                  value:
+                    error: Status must be either 'pending' or 'completed'
+
+        "401":
+          $ref: "#/components/responses/MissingToken"
+
+        "404":
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: Task not found
+
+        "422":
+          $ref: "#/components/responses/InvalidToken"
+
+    delete:
+      tags:
+        - Tasks
+      summary: Delete a task
+      description: Deletes a task belonging to the authenticated user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TaskId"
+
+      responses:
+        "200":
+          description: Task deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+              example:
+                message: Task deleted successfully
+
+        "401":
+          $ref: "#/components/responses/MissingToken"
+
+        "404":
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: Task not found
+
+        "422":
+          $ref: "#/components/responses/InvalidToken"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Enter the JWT access token received from POST /login.
+        Swagger automatically adds the Bearer prefix.
+
+  parameters:
+    TaskId:
+      name: task_id
+      in: path
+      required: true
+      description: The unique ID of the task
+      schema:
+        type: integer
+        minimum: 1
+      example: 1
+
+  responses:
+    MissingToken:
+      description: Authorization token is missing or expired
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/JwtErrorResponse"
+          examples:
+            missing_token:
+              summary: Missing authorization token
+              value:
+                error: Authorization token is required
+                details: Missing Authorization Header
+
+            expired_token:
+              summary: Expired authorization token
+              value:
+                error: Authorization token has expired
+
+    InvalidToken:
+      description: Authorization token is invalid
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/JwtErrorResponse"
+          example:
+            error: Invalid authorization token
+            details: Token validation failed
+
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: Task Manager API is running
+
+    AboutResponse:
+      type: object
+      required:
+        - project
+        - language
+        - framework
+      properties:
+        project:
+          type: string
+          example: Task Manager API
+
+        language:
+          type: string
+          example: Python
+
+        framework:
+          type: string
+          example: Flask
+
+    AuthRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 3
+          example: swagger_user
+
+        password:
+          type: string
+          format: password
+          minLength: 6
+          example: "123456"
+
+    User:
+      type: object
+      required:
+        - id
+        - username
+      properties:
+        id:
+          type: integer
+          example: 1
+
+        username:
+          type: string
+          example: swagger_user
+
+    RegisterResponse:
+      type: object
+      required:
+        - id
+        - username
+        - message
+      properties:
+        id:
+          type: integer
+          example: 1
+
+        username:
+          type: string
+          example: swagger_user
+
+        message:
+          type: string
+          example: User registered successfully
+
+    LoginResponse:
+      type: object
+      required:
+        - access_token
+        - user
+        - message
+      properties:
+        access_token:
+          type: string
+          description: JWT access token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+
+        user:
+          $ref: "#/components/schemas/User"
+
+        message:
+          type: string
+          example: Login successful
+
+    Task:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - category
+        - status
+        - user_id
+      properties:
+        id:
+          type: integer
+          example: 1
+
+        title:
+          type: string
+          example: Finish Swagger documentation
+
+        description:
+          type: string
+          example: Document all API endpoints
+
+        category:
+          type: string
+          example: work
+
+        status:
+          type: string
+          enum:
+            - pending
+            - completed
+          example: pending
+
+        user_id:
+          type: integer
+          example: 1
+
+    TaskCreateRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          example: Finish Swagger documentation
+
+        description:
+          type: string
+          default: ""
+          example: Document all API endpoints
+
+        category:
+          type: string
+          default: general
+          example: work
+
+    TaskUpdateRequest:
+      type: object
+      description: All fields are optional, but at least one should be provided.
+      properties:
+        title:
+          type: string
+          example: Finish Swagger documentation
+
+        description:
+          type: string
+          example: Complete and test the API documentation
+
+        category:
+          type: string
+          example: work
+
+        status:
+          type: string
+          enum:
+            - pending
+            - completed
+          example: completed
+
+    MessageResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: Task deleted successfully
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          example: An error occurred
+
+    JwtErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          example: Invalid authorization token
+
+        details:
+          type: string
+          example: Token validation failed
+

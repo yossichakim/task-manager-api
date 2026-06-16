@@ -1,7 +1,7 @@
 import sqlite3
 
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, get_jwt, jwt_required
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.database import get_database_connection
@@ -129,4 +129,28 @@ def login():
             "username": user["username"]
         },
         "message": "Login successful"
+    })
+
+
+@auth_bp.route("/logout", methods=["DELETE"])
+@jwt_required()
+def logout():
+    token_data = get_jwt()
+    jti = token_data["jti"]
+
+    connection = get_database_connection()
+
+    connection.execute(
+        """
+        INSERT INTO revoked_tokens (jti)
+        VALUES (?)
+        """,
+        (jti,)
+    )
+
+    connection.commit()
+    connection.close()
+
+    return jsonify({
+        "message": "Logout successful"
     })

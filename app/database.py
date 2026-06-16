@@ -41,6 +41,16 @@ def init_db():
         """
     )
 
+    cursor.execute(
+    """
+    CREATE TABLE IF NOT EXISTS revoked_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        jti TEXT NOT NULL UNIQUE,
+        revoked_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+    """
+)
+
     task_columns = cursor.execute(
         "PRAGMA table_info(tasks)"
     ).fetchall()

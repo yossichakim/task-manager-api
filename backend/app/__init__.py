@@ -1,3 +1,4 @@
+from flask_cors import CORS
 import os
 
 from dotenv import load_dotenv
@@ -17,6 +18,22 @@ load_dotenv()
 
 def create_app(test_config=None):
     app = Flask(__name__)
+
+    frontend_url = os.getenv("FRONTEND_URL")
+
+    allowed_origins = [
+        "http://localhost:5173",
+    ]
+
+    if frontend_url:
+        allowed_origins.append(frontend_url)
+
+    CORS(
+        app,
+        resources={r"/*": {"origins": allowed_origins}},
+        allow_headers=["Content-Type", "Authorization"],
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    )
 
     swagger_url = "/docs"
     api_url = "/openapi.yaml"

@@ -53,6 +53,7 @@ function App() {
 
   const handleApiError = useCallback(
     (error, fallbackMessage) => {
+      // This API uses 401 and 422 when credentials or tokens are invalid or unusable.
       if (error.status === 401 || error.status === 422) {
         clearSession()
       }
@@ -170,6 +171,7 @@ function App() {
         text: error.message || 'The session was cleared locally.',
       })
     } finally {
+      // Always end the browser session locally, even if server-side token revocation fails.
       clearSession()
       setActiveTaskId(null)
     }

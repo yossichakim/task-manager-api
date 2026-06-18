@@ -12,6 +12,10 @@ The backend lets users register, log in, receive a JWT access token, and perform
 
 > The frontend and backend are deployed as separate Render services. Depending on the service state, the first request may take some time.
 
+## Application Preview
+
+![Task Manager application preview](docs/task-manager-preview.png)
+
 ## Features
 
 * User registration and login

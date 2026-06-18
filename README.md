@@ -6,10 +6,11 @@ The backend lets users register, log in, receive a JWT access token, and perform
 
 ## Live Demo
 
-* API: https://task-manager-api-yossi.onrender.com
-* Swagger UI: https://task-manager-api-yossi.onrender.com/docs
+* Frontend application: https://task-manager-frontend-pkip.onrender.com/
+* Backend API: https://task-manager-api-yossi.onrender.com
+* API documentation (Swagger UI): https://task-manager-api-yossi.onrender.com/docs
 
-> The application is deployed on Render's free tier. The first request may take some time if the service is sleeping.
+> The frontend and backend are deployed as separate Render services. Depending on the service state, the first request may take some time.
 
 ## Features
 
@@ -21,7 +22,7 @@ The backend lets users register, log in, receive a JWT access token, and perform
 * Interactive Swagger/OpenAPI documentation
 * Automated backend tests with pytest
 * React frontend built with Vite
-* Production backend deployment with Gunicorn and Render
+* Deployed React frontend and Flask API on Render
 
 ## Technologies
 
@@ -35,6 +36,12 @@ The backend lets users register, log in, receive a JWT access token, and perform
 
 ```text
 task-manager-api/
+|-- .codex/
+|   `-- skills/
+|       `-- safe-frontend-change/
+|           |-- agents/
+|           |   `-- openai.yaml
+|           `-- SKILL.md
 |-- backend/
 |   |-- app/
 |   |   |-- __init__.py
@@ -56,7 +63,17 @@ task-manager-api/
 |   |-- requirements.txt
 |   `-- wsgi.py
 |-- frontend/
+|   |-- public/
+|   |-- src/
+|   |   |-- assets/
+|   |   |-- App.css
+|   |   |-- App.jsx
+|   |   |-- index.css
+|   |   `-- main.jsx
+|   |-- package.json
+|   `-- vite.config.js
 |-- .gitignore
+|-- AGENTS.md
 `-- README.md
 ```
 
@@ -118,10 +135,19 @@ python -m pip install -r requirements.txt
 
 ## Environment Variables
 
-Create a `.env` file in the repository root:
+The backend example configuration is available at `backend/.env.example`. For local backend development, create `backend/.env`:
 
 ```env
 JWT_SECRET_KEY=your-secure-secret-key
+FRONTEND_URL=http://localhost:5173
+```
+
+`JWT_SECRET_KEY` is required and is used to sign JWT access tokens.
+
+`FRONTEND_URL` controls the additional frontend origin allowed by the backend CORS configuration. The local Vite origin, `http://localhost:5173`, is already allowed by the backend. In production, set `FRONTEND_URL` to the deployed frontend origin:
+
+```env
+FRONTEND_URL=https://task-manager-frontend-pkip.onrender.com
 ```
 
 Generate a secure secret key with:
@@ -132,9 +158,13 @@ python -c "import secrets; print(secrets.token_hex(32))"
 
 Copy the generated value into the `.env` file.
 
-Do not commit the `.env` file to GitHub.
+The frontend reads its API base URL from `VITE_API_BASE_URL`. For a production build, set this variable in `frontend/.env.production` or in the frontend deployment environment:
 
-An example configuration is available in `backend/.env.example`.
+```env
+VITE_API_BASE_URL=https://task-manager-api-yossi.onrender.com
+```
+
+The repository does not include a frontend `.env.example` file. Do not commit `.env` files or secrets to GitHub.
 
 ## Database
 
@@ -146,8 +176,11 @@ The main tables are:
 
 * `users`: `id`, `username`, `password_hash`
 * `tasks`: `id`, `title`, `description`, `category`, `status`, `user_id`
+* `revoked_tokens`: `id`, `jti`, `revoked_at`
 
 Each task is connected to the user who created it.
+
+The `revoked_tokens` table stores JWT identifiers after logout so that revoked access tokens cannot be reused.
 
 ## Run Backend Locally
 
@@ -183,6 +216,8 @@ The `backend/wsgi.py` file creates the Flask application instance used by the pr
 
 ## Frontend
 
+The backend must also be running during local frontend development.
+
 Install frontend dependencies from `frontend/`:
 
 ```bash
@@ -196,17 +231,27 @@ Run the frontend development server:
 npm run dev
 ```
 
-Build the frontend:
+The Vite development server proxies `/register`, `/login`, `/logout`, and `/tasks` requests to `http://127.0.0.1:5000`, as configured in `frontend/vite.config.js`.
+
+For a production frontend build, configure the deployed backend URL:
+
+```env
+VITE_API_BASE_URL=https://task-manager-api-yossi.onrender.com
+```
+
+This value can be provided through `frontend/.env.production` or the frontend deployment environment.
+
+## Frontend Validation
+
+Run the configured frontend lint and production build commands:
 
 ```bash
+cd frontend
+npm run lint
 npm run build
 ```
 
-Lint the frontend:
-
-```bash
-npm run lint
-```
+The repository does not currently include an automated frontend test suite.
 
 ## API Documentation
 
@@ -370,13 +415,13 @@ The test suite covers registration, login, password validation, JWT handling, lo
 
 ## Testing with REST Client
 
-The `backend/requests.http` file contains example HTTP requests that can be executed with the REST Client extension in Visual Studio Code.
+The `backend/requests.http` file contains development request examples for use with tools such as the REST Client extension in Visual Studio Code.
 
-Update the access token in the file after logging in.
+Protected requests require a current JWT access token returned by `POST /login`. Some examples require updating the token or authorization header before they can be executed successfully, so the file should not be treated as a script that runs unchanged from top to bottom.
 
 ## Deployment
 
-The API is deployed on Render.
+The Flask API is deployed on Render using Gunicorn and the WSGI entry point in `backend/wsgi.py`.
 
 Render configuration:
 
@@ -395,19 +440,34 @@ Start Command:
 gunicorn wsgi:app
 ```
 
-The production environment must include:
+The backend production environment must include:
 
 ```text
 JWT_SECRET_KEY
+FRONTEND_URL=https://task-manager-frontend-pkip.onrender.com
 ```
 
-The Render service is connected to the GitHub repository, allowing new pushes to the `main` branch to trigger automatic deployments.
+`FRONTEND_URL` allows the deployed frontend origin through the backend CORS configuration.
+
+The React frontend is deployed separately at:
+
+```text
+https://task-manager-frontend-pkip.onrender.com/
+```
+
+Its production environment must set:
+
+```text
+VITE_API_BASE_URL=https://task-manager-api-yossi.onrender.com
+```
+
+Deployment triggers and other Render account settings are managed outside this repository and may vary by service configuration.
 
 ## SQLite Deployment Limitation
 
 This project currently uses SQLite.
 
-On Render's free tier, the local filesystem is ephemeral. This means that registered users and tasks may be deleted after a restart, redeployment, or infrastructure replacement.
+Without persistent disk storage, Render's local filesystem is ephemeral. This means that registered users, revoked tokens, and tasks may be deleted after a restart, redeployment, or infrastructure replacement.
 
 The deployed application should therefore be treated as a live demonstration rather than permanent data storage.
 
@@ -440,7 +500,15 @@ A production-ready future version should use a persistent database such as Postg
 
 ## Project Status
 
-The backend project is complete and includes RESTful API design, user authentication, JWT authorization, task CRUD operations, user-specific data ownership, automated testing, OpenAPI documentation, Swagger UI, and public deployment.
+The documented backend scope is implemented and covered by automated pytest tests. It includes user authentication, JWT authorization and revocation, user-owned task CRUD operations, filtering, OpenAPI documentation, Swagger UI, and a deployed API.
+
+The React/Vite frontend is implemented and deployed. It provides registration and login, task creation and editing, status updates, deletion, filtering, and dashboard statistics using the existing backend API.
+
+## AI-Assisted Development
+
+The repository includes `AGENTS.md` for repository-level AI instructions and a repository-local Codex skill for guarded frontend-only changes.
+
+AI-assisted changes are not treated as automatically trusted. The documented workflow emphasizes scoped requests, minimal diffs, Git status and diff inspection, preservation of existing work, and relevant lint and build validation before changes are accepted.
 
 ## Author
 

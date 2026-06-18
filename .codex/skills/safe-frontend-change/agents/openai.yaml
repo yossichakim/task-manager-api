@@ -1,0 +1,4 @@
+interface:
+  display_name: "Safe Frontend Change"
+  short_description: "Make guarded, validated frontend-only changes"
+  default_prompt: "Use $safe-frontend-change to make a minimal frontend change while preserving backend safety."

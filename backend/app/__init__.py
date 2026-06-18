@@ -1,3 +1,5 @@
+"""Create and configure the Flask application and its extensions."""
+
 from flask_cors import CORS
 import os
 
@@ -17,10 +19,18 @@ load_dotenv()
 
 
 def create_app(test_config=None):
+    """Build the Flask application from environment and optional test config.
+
+    Environment variables are loaded before this factory runs. The factory
+    configures the JWT secret and database, applies test overrides, installs
+    CORS, JWT handlers, blueprints, and Swagger UI, then initializes the
+    database schema.
+    """
     app = Flask(__name__)
 
     frontend_url = os.getenv("FRONTEND_URL")
 
+    # Restrict browser access to local development and the configured frontend.
     allowed_origins = [
         "http://localhost:5173",
     ]
@@ -70,6 +80,7 @@ def create_app(test_config=None):
 
     @app.route("/openapi.yaml")
     def openapi_spec():
+        """Serve the bundled OpenAPI specification."""
         project_root = os.path.dirname(app.root_path)
         return send_from_directory(project_root, "openapi.yaml")
     

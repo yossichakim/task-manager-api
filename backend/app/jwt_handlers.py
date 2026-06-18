@@ -1,10 +1,14 @@
+"""Register JWT revocation checks and standardized authentication errors."""
+
 from flask import jsonify
 from app.database import get_database_connection
 
 
 def register_jwt_handlers(jwt):
+    """Attach revocation and error callbacks to a JWT manager."""
     @jwt.token_in_blocklist_loader
     def is_token_revoked(jwt_header, jwt_payload):
+        """Check persistent revoked-token storage for each protected request."""
         jti = jwt_payload["jti"]
 
         connection = get_database_connection()

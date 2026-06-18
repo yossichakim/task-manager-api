@@ -1,9 +1,17 @@
+"""Provide SQLite connections and initialize the application's schema."""
+
 import sqlite3
 
 from flask import current_app
 
 
 def get_database_connection():
+    """Return a configured SQLite connection for the current application.
+
+    The database path comes from ``current_app.config["DATABASE"]``. Returned
+    connections produce ``sqlite3.Row`` values and enforce foreign keys.
+    Callers must commit writes and close the connection.
+    """
     database_name = current_app.config["DATABASE"]
 
     connection = sqlite3.connect(database_name)
@@ -14,6 +22,11 @@ def get_database_connection():
 
 
 def init_db():
+    """Create required tables and migrate legacy task schemas if necessary.
+
+    Initialization is idempotent, adds ``tasks.user_id`` to legacy databases,
+    and commits and closes its own connection.
+    """
     connection = get_database_connection()
     cursor = connection.cursor()
 
@@ -51,6 +64,7 @@ def init_db():
     """
 )
 
+    # Preserve databases created before tasks were associated with users.
     task_columns = cursor.execute(
         "PRAGMA table_info(tasks)"
     ).fetchall()

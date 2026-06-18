@@ -1,3 +1,5 @@
+"""Expose authenticated, owner-scoped task CRUD operations."""
+
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
@@ -12,6 +14,10 @@ ALLOWED_STATUSES = {"pending", "completed"}
 @tasks_bp.route("/tasks", methods=["GET"])
 @jwt_required()
 def get_tasks():
+    """Return the authenticated user's tasks with optional status filters.
+
+    The ``status`` and ``category`` query parameters may narrow the result.
+    """
     current_user_id = int(get_jwt_identity())
 
     status = request.args.get("status")
@@ -49,10 +55,12 @@ def get_tasks():
 @tasks_bp.route("/tasks/<int:task_id>", methods=["GET"])
 @jwt_required()
 def get_task(task_id):
+    """Return one task owned by the authenticated user or a 404 response."""
     current_user_id = int(get_jwt_identity())
 
     connection = get_database_connection()
 
+    # Owner-scoped lookup prevents task discovery and treats foreign tasks as missing.
     task = connection.execute(
         """
         SELECT * FROM tasks
@@ -74,6 +82,11 @@ def get_task(task_id):
 @tasks_bp.route("/tasks", methods=["POST"])
 @jwt_required()
 def create_task():
+    """Create a task from JSON for the authenticated user.
+
+    A non-empty title is required; description and category are optional.
+    New tasks are owner-scoped, start pending, and return with status 201.
+    """
     current_user_id = int(get_jwt_identity())
 
     data = request.get_json(silent=True)
@@ -135,6 +148,11 @@ def create_task():
 @tasks_bp.route("/tasks/<int:task_id>", methods=["PUT"])
 @jwt_required()
 def update_task(task_id):
+    """Partially update an authenticated user's task.
+
+    Omitted JSON fields retain their values. Invalid status or title values
+    return 400, while missing or foreign tasks return 404.
+    """
     current_user_id = int(get_jwt_identity())
 
     data = request.get_json(silent=True)
@@ -214,6 +232,7 @@ def update_task(task_id):
 @tasks_bp.route("/tasks/<int:task_id>", methods=["DELETE"])
 @jwt_required()
 def delete_task(task_id):
+    """Delete an authenticated user's task or return 404 if unavailable."""
     current_user_id = int(get_jwt_identity())
 
     connection = get_database_connection()

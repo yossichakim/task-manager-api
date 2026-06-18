@@ -1,3 +1,5 @@
+"""Handle registration, authentication, token issuance, and logout revocation."""
+
 import sqlite3
 
 from flask import Blueprint, jsonify, request
@@ -12,6 +14,11 @@ auth_bp = Blueprint("auth", __name__)
 
 @auth_bp.route("/register", methods=["POST"])
 def register():
+    """Register a user from username and password JSON fields.
+
+    Credentials are validated, the password is stored as a generated hash,
+    and successful creation returns the new public user data with status 201.
+    """
     data = request.get_json(silent=True)
 
     if data is None:
@@ -76,6 +83,11 @@ def register():
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
+    """Authenticate JSON credentials and issue a JWT access token.
+
+    The password is verified against its stored hash. Successful tokens use
+    the user's database ID, encoded as a string, as their identity.
+    """
     data = request.get_json(silent=True)
 
     if data is None:
@@ -135,6 +147,7 @@ def login():
 @auth_bp.route("/logout", methods=["DELETE"])
 @jwt_required()
 def logout():
+    """Revoke the authenticated access token by persistently storing its JTI."""
     token_data = get_jwt()
     jti = token_data["jti"]
 

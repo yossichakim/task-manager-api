@@ -14,7 +14,7 @@ The backend lets users register, log in, receive a JWT access token, and perform
 
 ## Application Preview
 
-![Task Manager application preview](docs/task-manager-preview.png)(https://task-manager-frontend-pkip.onrender.com)
+[![Task Manager application preview](docs/task-manager-preview.png)](https://task-manager-frontend-pkip.onrender.com/)
 
 ## Features
 
